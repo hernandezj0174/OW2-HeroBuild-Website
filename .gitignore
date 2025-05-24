@@ -1,0 +1,14 @@
+# Ignore environment variables
+.env
+.env.local
+
+# Node modules (don't upload)
+node_modules/
+
+# Build output
+dist/
+build/
+
+# System files
+.DS_Store
+Thumbs.db
