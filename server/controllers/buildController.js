@@ -10,16 +10,26 @@ export const getBuilds = async (req, res) => {
   }
 };
 
-// Create a new build
+// Create a new build (requires authentication)
 export const createBuild = async (req, res) => {
   const { hero, title, description } = req.body;
+
+  if (!req.user || !req.user.uid) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+  }
 
   if (!hero || !title || !description) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
-    const newBuild = new Build({ hero, title, description });
+    const newBuild = new Build({
+      hero,
+      title,
+      description,
+      userId: req.user.uid,
+    });
+
     await newBuild.save();
     res.status(201).json(newBuild);
   } catch (err) {
@@ -27,17 +37,23 @@ export const createBuild = async (req, res) => {
   }
 };
 
-// Delete an existing build
 export const deleteBuild = async (req, res) => {
-  console.log('DELETE request received for ID:', req.params.id);
-
   const { id } = req.params;
 
   try {
-    const deleted = await Build.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ error: 'Build not found' });
+    const build = await Build.findById(id);
 
-    res.status(200).json({ message: 'Build deleted' });
+    if (!build) {
+      return res.status(404).json({ error: "Build not found" });
+    }
+
+    // 🔐 OWNER CHECK
+    if (build.userId !== req.user.uid) {
+      return res.status(403).json({ error: "Forbidden: Not the build owner" });
+    }
+
+    await build.deleteOne();
+    res.status(200).json({ message: "Build deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
