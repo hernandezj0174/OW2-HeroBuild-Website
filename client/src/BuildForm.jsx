@@ -16,23 +16,27 @@ const BuildForm = ({ user, onNewBuild }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`, // ✅ Send the Firebase token
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(build),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit build");
+      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log("Response data:", data);
+
+      if (response.status !== 201) {
+        throw new Error(data.error || "Failed to submit build");
       }
 
-      const data = await response.json();
-      console.log("Build submitted:", data);
+      if (typeof onNewBuild === "function") {
+        onNewBuild(data);
+      }
+
       setSuccess(true);
       setHero("");
       setTitle("");
       setDescription("");
-
-      onNewBuild(data);
     } catch (error) {
       console.error(error);
       setSuccess(false);

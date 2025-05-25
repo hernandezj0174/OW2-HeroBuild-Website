@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const BuildList = ({ user, builds, setBuilds }) => {
+const BuildList = ({ user }) => {
+  const [builds, setBuilds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -12,6 +13,7 @@ const BuildList = ({ user, builds, setBuilds }) => {
         setBuilds(data);
       } catch (error) {
         console.error("Failed to fetch builds:", error);
+        setError("Failed to load builds.");
       } finally {
         setLoading(false);
       }
@@ -27,7 +29,7 @@ const BuildList = ({ user, builds, setBuilds }) => {
       const response = await fetch(`http://localhost:5000/api/builds/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       });
 
@@ -45,9 +47,7 @@ const BuildList = ({ user, builds, setBuilds }) => {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 p-4">
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        Latest Hero Builds
-      </h2>
+      <h2 className="text-2xl font-bold mb-4 text-center">Latest Hero Builds</h2>
 
       {error && <p className="text-red-400 text-center mb-4">❌ {error}</p>}
 
@@ -60,7 +60,10 @@ const BuildList = ({ user, builds, setBuilds }) => {
       ) : (
         <ul className="space-y-4">
           {builds.map((build) => (
-            <li key={build._id} className="...">
+            <li
+              key={build._id}
+              className="bg-slate-700 rounded-xl p-5 shadow-lg border border-slate-600"
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-orange-300">
@@ -72,7 +75,6 @@ const BuildList = ({ user, builds, setBuilds }) => {
                   </p>
                 </div>
 
-                {/* ✅ Show delete button only if user is owner */}
                 {user?.uid === build.userId && (
                   <button
                     onClick={() => deleteBuild(build._id)}
